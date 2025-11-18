@@ -9,6 +9,7 @@ export const colors = {
         primary: '#f1f5f9',
         secondary: '#cbd5e1',
         tertiary: '#94a3b8',
+        dark: '#0f172a',
     },
 
     border: {
