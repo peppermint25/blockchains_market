@@ -3,7 +3,10 @@
 import Navigation from "@/app/components/Navigation";
 import { colors } from "@/app/styles/colors";
 import { colorCodes } from "@/app/styles/color-codes";
+// import { colors } from "./styles/colors";
+// import { colorCodes } from "./styles/color-codes";
 import Footer from "@/app/components/Footer";
+// import Footer from "./components/Footer";
 import Image from "next/image";
 
 // Hard coded charities in Latvia -> later change to a better implementation
