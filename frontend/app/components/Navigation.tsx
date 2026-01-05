@@ -97,6 +97,15 @@ export default function Navigation() {
               Sell
             </Link>
             <Link
+              href="/donate"
+              className="text-base font-medium uppercase transition-all hover:scale-105"
+              style={{ color: colors.text.secondary }}
+              onMouseEnter={(e) => e.currentTarget.style.color = colors.text.primary}
+              onMouseLeave={(e) => e.currentTarget.style.color = colors.text.secondary}
+            >
+              Donate
+            </Link>
+            <Link
               href="/orders"
               className="text-base font-medium uppercase transition-all hover:scale-105"
               style={{ color: colors.text.secondary }}

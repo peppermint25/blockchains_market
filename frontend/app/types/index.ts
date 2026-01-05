@@ -13,6 +13,9 @@ export interface ListingMetadata {
   description: string;
   image: string;
   condition?: string;
+  size?: string;
+  color?: string;
+  brand?: string;
 }
 
 export interface DisplayListing {
@@ -20,13 +23,22 @@ export interface DisplayListing {
   name: string;
   description: string;
   price: string;
-  priceWei: string;  // Changed from bigint to string
+  priceWei: string;
   image: string;
   category: number;
   seller: string;
   charity: string;
+  charityName?: string;
   status: number;
+  details?: {
+    condition: string;
+    size: string;
+    color: string;
+    brand: string;
+  };
 }
+
+// ... keep other exports
 
 export const CategoryNames: Record<number, string> = {
   0: "Clothing",

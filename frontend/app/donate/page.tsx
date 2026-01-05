@@ -7,9 +7,9 @@ import { colors } from "@/app/styles/colors";
 import { useWallet } from "@/app/hooks/useWallet";
 import { useCharities } from "@/app/hooks/useCharities";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/app/config/contract";
-import { CategoryNames, CategoryRoutes } from "@/app/types";
+import { CategoryNames } from "@/app/types";
 
-export default function SellPage() {
+export default function DonatePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCharity = searchParams.get("charity") || "";
@@ -20,10 +20,8 @@ export default function SellPage() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: "",
     category: 0,
     charityAddress: preselectedCharity,
-    // Item details
     condition: "",
     size: "",
     color: "",
@@ -82,7 +80,7 @@ export default function SellPage() {
 
       setStatus("Uploading metadata to IPFS...");
 
-      // 2. Create and upload metadata with details
+      // 2. Create and upload metadata
       const metadata = {
         name: formData.name,
         description: formData.description,
@@ -106,9 +104,9 @@ export default function SellPage() {
       const { ipfsHash: metadataHash } = await metadataResponse.json();
       const metadataURI = `ipfs://${metadataHash}`;
 
-      setStatus("Creating listing on blockchain...");
+      setStatus("Donating item to charity on blockchain...");
 
-      // 3. Create listing on blockchain
+      // 3. Donate item directly to charity
       const signer = await getSigner();
       if (!signer) {
         throw new Error("Failed to get wallet signer");
@@ -116,11 +114,8 @@ export default function SellPage() {
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       
-      const priceInWei = ethers.parseEther(formData.price);
-      
-      const tx = await contract.createListing(
+      const tx = await contract.donateItemToCharity(
         metadataURI,
-        priceInWei,
         formData.category,
         formData.charityAddress
       );
@@ -128,15 +123,15 @@ export default function SellPage() {
       setStatus("Waiting for confirmation...");
       await tx.wait();
 
-      setStatus("Listing created successfully!");
+      setStatus("Item donated successfully! Thank you for your generosity! 🎉");
       
       setTimeout(() => {
-        router.push(`/shop`);
+        router.push("/charities");
       }, 2000);
 
     } catch (error: unknown) {
-      console.error("Error creating listing:", error);
-      setStatus(error instanceof Error ? error.message : "Failed to create listing");
+      console.error("Error donating item:", error);
+      setStatus(error instanceof Error ? error.message : "Failed to donate item");
     } finally {
       setIsSubmitting(false);
     }
@@ -147,9 +142,15 @@ export default function SellPage() {
   return (
     <div className="min-h-screen py-12" style={{ backgroundColor: colors.background.secondary }}>
       <div className="max-w-2xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8" style={{ color: colors.text.primary }}>
-          Sell an Item
-        </h1>
+        <div className="text-center mb-8">
+          <p className="text-5xl mb-4">💝</p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: colors.text.primary }}>
+            Donate an Item
+          </h1>
+          <p style={{ color: colors.text.secondary }}>
+            Give directly to a charity - no sale needed
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Image Upload */}
@@ -196,7 +197,7 @@ export default function SellPage() {
                 borderColor: colors.border.primary,
                 color: colors.text.primary
               }}
-              placeholder="e.g., Vintage Leather Jacket"
+              placeholder="e.g., Winter Jacket"
             />
           </div>
 
@@ -209,18 +210,18 @@ export default function SellPage() {
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               required
-              rows={4}
+              rows={3}
               className="w-full px-4 py-3 rounded-lg border outline-none resize-none"
               style={{ 
                 backgroundColor: colors.background.primary,
                 borderColor: colors.border.primary,
                 color: colors.text.primary
               }}
-              placeholder="Describe your item in detail..."
+              placeholder="Describe the item you're donating..."
             />
           </div>
 
-          {/* Item Details Section */}
+          {/* Item Details */}
           <div 
             className="p-4 rounded-lg"
             style={{ backgroundColor: colors.background.primary }}
@@ -230,7 +231,6 @@ export default function SellPage() {
             </h3>
             
             <div className="grid grid-cols-2 gap-4">
-              {/* Condition */}
               <div>
                 <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
                   Condition
@@ -252,7 +252,6 @@ export default function SellPage() {
                 </select>
               </div>
 
-              {/* Size */}
               <div>
                 <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
                   Size
@@ -267,11 +266,10 @@ export default function SellPage() {
                     borderColor: colors.border.primary,
                     color: colors.text.primary
                   }}
-                  placeholder="e.g., M, 42, 10x12"
+                  placeholder="e.g., M, 42"
                 />
               </div>
 
-              {/* Color */}
               <div>
                 <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
                   Color
@@ -286,11 +284,10 @@ export default function SellPage() {
                     borderColor: colors.border.primary,
                     color: colors.text.primary
                   }}
-                  placeholder="e.g., Black, Navy Blue"
+                  placeholder="e.g., Black"
                 />
               </div>
 
-              {/* Brand */}
               <div>
                 <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
                   Brand
@@ -305,32 +302,10 @@ export default function SellPage() {
                     borderColor: colors.border.primary,
                     color: colors.text.primary
                   }}
-                  placeholder="e.g., Nike, IKEA"
+                  placeholder="e.g., Nike"
                 />
               </div>
             </div>
-          </div>
-
-          {/* Price */}
-          <div>
-            <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-              Price (ETH) *
-            </label>
-            <input
-              type="number"
-              step="0.0001"
-              min="0.0001"
-              value={formData.price}
-              onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-              required
-              className="w-full px-4 py-3 rounded-lg border outline-none"
-              style={{ 
-                backgroundColor: colors.background.primary,
-                borderColor: colors.border.primary,
-                color: colors.text.primary
-              }}
-              placeholder="0.01"
-            />
           </div>
 
           {/* Category */}
@@ -357,7 +332,7 @@ export default function SellPage() {
           {/* Charity Selection */}
           <div>
             <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-              Select Charity *
+              Donate To *
             </label>
             {charitiesLoading ? (
               <p style={{ color: colors.text.tertiary }}>Loading charities...</p>
@@ -383,11 +358,6 @@ export default function SellPage() {
                 ))}
               </select>
             )}
-            {formData.charityAddress && (
-              <p className="text-sm mt-1" style={{ color: colors.text.tertiary }}>
-                Proceeds will go to this charity after purchase is confirmed
-              </p>
-            )}
           </div>
 
           {/* Status Message */}
@@ -406,15 +376,15 @@ export default function SellPage() {
             disabled={isSubmitting || (charities.length === 0)}
             className="w-full py-4 rounded-lg font-medium text-lg transition-all hover:opacity-90 disabled:opacity-50"
             style={{
-              backgroundColor: colors.button.primary,
-              color: colors.background.primary
+              backgroundColor: "#22c55e",
+              color: "white"
             }}
           >
             {!isConnected 
-              ? "Connect Wallet to Sell" 
+              ? "Connect Wallet to Donate" 
               : isSubmitting 
-                ? "Creating Listing..." 
-                : "Create Listing"
+                ? "Donating Item..." 
+                : "💝 Donate Item"
             }
           </button>
         </form>
