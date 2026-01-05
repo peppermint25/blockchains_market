@@ -1,20 +1,18 @@
 "use client";
-
 import Image from "next/image";
 import { colors } from "@/app/styles/colors";
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-}
+import { DisplayListing, CategoryNames } from "@/app/types";
+import { useCart } from "@/app/context/CartContext";
 
 interface ProductCardProps {
-  product: Product;
+  product: DisplayListing;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { addToCart, items } = useCart();
+  
+  const isInCart = items.some(item => item.id === product.id);
+
   return (
     <div
       className="rounded-lg border overflow-hidden hover:shadow-lg transition-shadow"
@@ -24,41 +22,48 @@ export default function ProductCard({ product }: ProductCardProps) {
       }}
     >
       <div
-        className="aspect-square flex items-center justify-center"
+        className="aspect-square relative"
         style={{ backgroundColor: colors.background.tertiary }}
       >
         <Image
-          className="invert"
           src={product.image}
           alt={product.name}
-          width={200}
-          height={200}
+          fill
+          className="object-cover"
+          unoptimized
         />
+        <span 
+          className="absolute top-2 left-2 px-2 py-1 text-xs rounded"
+          style={{ 
+            backgroundColor: colors.background.primary,
+            color: colors.text.secondary
+          }}
+        >
+          {CategoryNames[product.category]}
+        </span>
       </div>
       <div className="p-4">
-        <h3 className="text-lg font-semibold mb-2" style={{ color: colors.text.primary }}>
+        <h3 className="text-lg font-semibold mb-1 truncate" style={{ color: colors.text.primary }}>
           {product.name}
         </h3>
+        <p className="text-sm mb-2 truncate" style={{ color: colors.text.tertiary }}>
+          {product.description}
+        </p>
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold" style={{ color: colors.text.primary }}>
-            ${product.price}
+            {product.price} ETH
           </span>
-            <button
-                className="px-3 py-1 rounded-lg transition-colors"
-                style={{
-                    backgroundColor: colors.button.primary,
-                    color: colors.background.primary
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.button.primaryHover}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.button.primary}
-            >
-                <Image
-                    src="/images/cart.png"
-                    alt="Add to Cart"
-                    width={30}
-                    height={20}
-                />
-            </button>
+          <button
+            onClick={() => addToCart(product)}
+            disabled={isInCart}
+            className="px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+            style={{
+              backgroundColor: isInCart ? colors.button.secondary : colors.button.primary,
+              color: isInCart ? colors.text.primary : colors.background.primary
+            }}
+          >
+            {isInCart ? "In Cart" : "Add to Cart"}
+          </button>
         </div>
       </div>
     </div>

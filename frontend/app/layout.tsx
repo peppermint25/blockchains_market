@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navigation from "@/app/components/Navigation";
+import Footer from "@/app/components/Footer";
+import CartSidebar from "@/app/components/CartSidebar";
+import { CartProvider } from "@/app/context/CartContext";
+import { colors } from "@/app/styles/colors";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Blockchain-based Secondhand Market",
-  description: "Blockchain-based Secondhand Market, the second hand market built for your peace of mind.",
+  title: "BCSM - Blockchain Secondhand Market",
+  description: "Buy and sell secondhand items with blockchain security",
 };
 
 export default function RootLayout({
@@ -19,12 +28,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={montserrat.variable}>
-      <body
-        className="antialiased"
-        style={{ fontFamily: 'var(--font-montserrat), sans-serif' }}
+    <html lang="en">
+      <body 
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
+        style={{ backgroundColor: colors.background.primary }}
       >
-        {children}
+        <CartProvider>
+          <Navigation />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+          <CartSidebar />
+        </CartProvider>
       </body>
     </html>
   );
