@@ -21,7 +21,7 @@ export default function Home() {
           </p>
           <div className="flex gap-4 justify-center">
             <Link
-              href="/categories/clothing"
+              href="/shop"
               className="px-6 py-3 rounded-lg font-medium transition-all hover:opacity-90"
               style={{
                 backgroundColor: colors.button.primary,
