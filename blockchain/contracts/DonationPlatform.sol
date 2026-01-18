@@ -5,6 +5,8 @@ contract SecondhandMarket {
     
     // === ROLES ===
     address public admin;
+    mapping(address => bool) public admins;
+    address[] public adminList;
     
     // === ENUMS ===
     enum ListingStatus { Active, Sold, Cancelled }
@@ -47,7 +49,7 @@ contract SecondhandMarket {
     struct Goal {
         uint256 id;
         address charity;
-        string metadataURI;      // IPFS: title, description, images
+        string metadataURI;
         uint256 targetAmount;
         uint256 currentAmount;
         GoalStatus status;
@@ -57,7 +59,7 @@ contract SecondhandMarket {
     struct ItemRequest {
         uint256 id;
         address charity;
-        string metadataURI;      // IPFS: what items needed, quantity, description
+        string metadataURI;
         Category category;
         ItemRequestStatus status;
         uint256 fulfilledCount;
@@ -83,10 +85,13 @@ contract SecondhandMarket {
     uint256 public constant DISPUTE_WINDOW = 14 days;
     
     // === EVENTS ===
+    event AdminAdded(address indexed newAdmin, address indexed addedBy);
+    event AdminRemoved(address indexed removedAdmin, address indexed removedBy);
     event CharityAdded(uint256 indexed charityId, address indexed charityAddress, string metadataURI);
     event CharityUpdated(uint256 indexed charityId, address indexed charityAddress, bool isVerified);
     event ListingCreated(uint256 indexed listingId, address indexed seller, uint256 price, Category category);
     event ListingCancelled(uint256 indexed listingId);
+    event ListingCancelledByAdmin(uint256 indexed listingId, address indexed admin);
     event ItemPurchased(uint256 indexed orderId, uint256 indexed listingId, address indexed buyer);
     event ItemShipped(uint256 indexed orderId, address indexed seller);
     event DeliveryConfirmed(uint256 indexed orderId, address indexed buyer);
@@ -103,7 +108,12 @@ contract SecondhandMarket {
     
     // === MODIFIERS ===
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can do this");
+        require(msg.sender == admin || admins[msg.sender], "Only admin can do this");
+        _;
+    }
+    
+    modifier onlyPrimaryAdmin() {
+        require(msg.sender == admin, "Only primary admin can do this");
         _;
     }
     
@@ -125,6 +135,54 @@ contract SecondhandMarket {
     // === CONSTRUCTOR ===
     constructor() {
         admin = msg.sender;
+        admins[msg.sender] = true;
+        adminList.push(msg.sender);
+    }
+    
+    // === ADMIN MANAGEMENT FUNCTIONS ===
+    
+    function addAdmin(address _newAdmin) external onlyAdmin {
+        require(_newAdmin != address(0), "Invalid address");
+        require(!admins[_newAdmin], "Already an admin");
+        
+        admins[_newAdmin] = true;
+        adminList.push(_newAdmin);
+        emit AdminAdded(_newAdmin, msg.sender);
+    }
+    
+    function removeAdmin(address _adminToRemove) external onlyAdmin {
+        require(_adminToRemove != admin, "Cannot remove primary admin");
+        require(_adminToRemove != msg.sender, "Cannot remove yourself");
+        require(admins[_adminToRemove], "Not an admin");
+        
+        admins[_adminToRemove] = false;
+        
+        // Remove from array
+        for (uint256 i = 0; i < adminList.length; i++) {
+            if (adminList[i] == _adminToRemove) {
+                adminList[i] = adminList[adminList.length - 1];
+                adminList.pop();
+                break;
+            }
+        }
+        
+        emit AdminRemoved(_adminToRemove, msg.sender);
+    }
+    
+    function isAdminAddress(address _addr) external view returns (bool) {
+        return _addr == admin || admins[_addr];
+    }
+    
+    function getAllAdmins() external view returns (address[] memory) {
+        return adminList;
+    }
+    
+    function getAdminCount() external view returns (uint256) {
+        return adminList.length;
+    }
+    
+    function getPrimaryAdmin() external view returns (address) {
+        return admin;
     }
     
     // === ADMIN FUNCTIONS ===
@@ -167,8 +225,24 @@ contract SecondhandMarket {
         emit CharityUpdated(idx, _charityAddress, _isVerified);
     }
     
-    function transferAdmin(address _newAdmin) external onlyAdmin {
+    function adminCancelListing(uint256 _listingId) external onlyAdmin {
+        Listing storage listing = listings[_listingId];
+        require(listing.status == ListingStatus.Active, "Listing not active");
+        
+        listing.status = ListingStatus.Cancelled;
+        emit ListingCancelledByAdmin(_listingId, msg.sender);
+    }
+    
+    function transferPrimaryAdmin(address _newAdmin) external onlyPrimaryAdmin {
         require(_newAdmin != address(0), "Invalid address");
+        require(_newAdmin != admin, "Already primary admin");
+        
+        // Add new admin if not already
+        if (!admins[_newAdmin]) {
+            admins[_newAdmin] = true;
+            adminList.push(_newAdmin);
+        }
+        
         admin = _newAdmin;
     }
     
@@ -421,11 +495,9 @@ contract SecondhandMarket {
         
         order.status = OrderStatus.Completed;
         
-        // Update charity's total received
         uint256 idx = charityIndex[order.charity];
         charities[idx].totalReceived += order.amount;
         
-        // Update any active goals for this charity
         _updateCharityGoals(order.charity, order.amount);
         
         (bool success, ) = order.charity.call{value: order.amount}("");
@@ -444,7 +516,7 @@ contract SecondhandMarket {
                     goal.status = GoalStatus.Completed;
                 }
                 emit GoalUpdated(goalIds[i], goal.currentAmount, goal.status);
-                break; // Only contribute to one active goal at a time
+                break;
             }
         }
     }
