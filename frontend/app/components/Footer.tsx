@@ -28,16 +28,16 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm" style={{ color: colors.text.tertiary }}>
                             <li>
                                 <a
-                                    href="#"
+                                    href="/contact"
                                     onMouseEnter={(e) => e.currentTarget.style.color = colors.text.primary}
                                     onMouseLeave={(e) => e.currentTarget.style.color = colors.text.tertiary}
                                 >
-                                    Contact
+                                    Contact Us
                                 </a>
                             </li>
                             <li>
                                 <a
-                                    href="#"
+                                    href="/privacy"
                                     onMouseEnter={(e) => e.currentTarget.style.color = colors.text.primary}
                                     onMouseLeave={(e) => e.currentTarget.style.color = colors.text.tertiary}
                                 >
@@ -46,7 +46,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <a
-                                    href="#"
+                                    href="/terms"
                                     onMouseEnter={(e) => e.currentTarget.style.color = colors.text.primary}
                                     onMouseLeave={(e) => e.currentTarget.style.color = colors.text.tertiary}
                                 >
@@ -61,6 +61,9 @@ export default function Footer() {
                         </h3>
                         <p className="text-sm" style={{ color: colors.text.tertiary }}>
                             pleasedont@bcsm.com
+                        </p>
+                        <p className="text-sm" style={{ color: colors.text.tertiary }}>
+                            +371 2000100
                         </p>
                     </div>
                 </div>
