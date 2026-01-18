@@ -7,16 +7,20 @@ import { colors } from "@/app/styles/colors";
 import { useWallet } from "@/app/hooks/useWallet";
 import { useCharities } from "@/app/hooks/useCharities";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/app/config/contract";
-import { CategoryNames, CategoryRoutes } from "@/app/types";
+import { CategoryRoutes } from "@/app/types";
+import { CategorySelect } from "./components/CategorySelect";
+import { ImageUpload } from "./components/ImageUpload";
+import { ItemDetails } from "./components/ItemDetails";
+import { CharitySelect } from "./components/CharitySelect";
 
 function SellForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCharity = searchParams.get("charity") || "";
-  
+
   const { isConnected, connect, getSigner } = useWallet();
   const { charities, loading: charitiesLoading } = useCharities();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -27,7 +31,17 @@ function SellForm() {
     size: "",
     color: "",
     brand: "",
-    gender: ""
+    gender: "",
+    sportType: "",
+    equipmentType: "",
+    weight: "",
+    material: "",
+    modelNumber: "",
+    storageCapacity: "",
+    screenSize: "",
+    batteryHealth: "",
+    ram: "",
+    operatingSystem: ""
   });
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -42,9 +56,13 @@ function SellForm() {
     }
   };
 
+  const handleItemDetailChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isConnected) {
       connect();
       return;
@@ -89,7 +107,17 @@ function SellForm() {
         size: formData.size,
         color: formData.color,
         brand: formData.brand,
-        gender: formData.gender
+        gender: formData.gender,
+        sportType: formData.sportType,
+        equipmentType: formData.equipmentType,
+        weight: formData.weight,
+        material: formData.material,
+        modelNumber: formData.modelNumber,
+        storageCapacity: formData.storageCapacity,
+        screenSize: formData.screenSize,
+        batteryHealth: formData.batteryHealth,
+        ram: formData.ram,
+        operatingSystem: formData.operatingSystem
       };
 
       const metadataResponse = await fetch("/api/upload-json", {
@@ -113,9 +141,9 @@ function SellForm() {
       }
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      
+
       const priceInWei = ethers.parseEther(formData.price);
-      
+
       const tx = await contract.createListing(
         metadataURI,
         priceInWei,
@@ -127,7 +155,7 @@ function SellForm() {
       await tx.wait();
 
       setStatus("Listing created successfully!");
-      
+
       setTimeout(() => {
         router.push(`/categories/${CategoryRoutes[formData.category]}`);
       }, 2000);
@@ -140,8 +168,6 @@ function SellForm() {
     }
   };
 
-  const conditions = ["New", "Like New", "Good", "Fair", "Poor"];
-
   return (
     <div className="max-w-2xl mx-auto px-4">
       <h1 className="text-3xl font-bold mb-8" style={{ color: colors.text.primary }}>
@@ -149,33 +175,17 @@ function SellForm() {
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Category */}
+        <CategorySelect
+          value={formData.category}
+          onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+        />
+
         {/* Image Upload */}
-        <div>
-          <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-            Item Image *
-          </label>
-          <div 
-            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:opacity-80"
-            style={{ borderColor: colors.border.primary, backgroundColor: colors.background.primary }}
-            onClick={() => document.getElementById("image-input")?.click()}
-          >
-            {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded" />
-            ) : (
-              <div style={{ color: colors.text.tertiary }}>
-                <p className="text-4xl mb-2">📷</p>
-                <p>Click to upload image</p>
-              </div>
-            )}
-            <input
-              id="image-input"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </div>
-        </div>
+        <ImageUpload
+          preview={imagePreview}
+          onChange={handleImageChange}
+        />
 
         {/* Name */}
         <div>
@@ -188,7 +198,7 @@ function SellForm() {
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             required
             className="w-full px-4 py-3 rounded-lg border outline-none"
-            style={{ 
+            style={{
               backgroundColor: colors.background.primary,
               borderColor: colors.border.primary,
               color: colors.text.primary
@@ -208,121 +218,13 @@ function SellForm() {
             required
             rows={4}
             className="w-full px-4 py-3 rounded-lg border outline-none resize-none"
-            style={{ 
+            style={{
               backgroundColor: colors.background.primary,
               borderColor: colors.border.primary,
               color: colors.text.primary
             }}
             placeholder="Describe your item in detail..."
           />
-        </div>
-
-        {/* Item Details Section */}
-        <div 
-          className="p-4 rounded-lg"
-          style={{ backgroundColor: colors.background.primary }}
-        >
-          <h3 className="font-medium mb-4" style={{ color: colors.text.primary }}>
-            Item Details (Optional)
-          </h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
-                Gender
-              </label>
-              <select
-                value={formData.gender}
-                onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{
-                  backgroundColor: colors.background.secondary,
-                  borderColor: colors.border.primary,
-                  color: colors.text.primary
-                }}
-              >
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Unisex">Unisex</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
-                Condition
-              </label>
-              <select
-                value={formData.condition}
-                onChange={(e) => setFormData(prev => ({ ...prev, condition: e.target.value }))}
-                className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{
-                  backgroundColor: colors.background.secondary,
-                  borderColor: colors.border.primary,
-                  color: colors.text.primary
-                }}
-              >
-                <option value="">Select condition</option>
-                {conditions.map(condition => (
-                  <option key={condition} value={condition}>{condition}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
-                Size
-              </label>
-              <input
-                type="text"
-                value={formData.size}
-                onChange={(e) => setFormData(prev => ({ ...prev, size: e.target.value }))}
-                className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{
-                  backgroundColor: colors.background.secondary,
-                  borderColor: colors.border.primary,
-                  color: colors.text.primary
-                }}
-                placeholder="e.g., M, 42, 10x12"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
-                Color
-              </label>
-              <input
-                type="text"
-                value={formData.color}
-                onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{
-                  backgroundColor: colors.background.secondary,
-                  borderColor: colors.border.primary,
-                  color: colors.text.primary
-                }}
-                placeholder="e.g., Black, Navy Blue"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
-                Brand
-              </label>
-              <input
-                type="text"
-                value={formData.brand}
-                onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
-                className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{
-                  backgroundColor: colors.background.secondary,
-                  borderColor: colors.border.primary,
-                  color: colors.text.primary
-                }}
-                placeholder="e.g., Nike, IKEA"
-              />
-            </div>
-          </div>
         </div>
 
         {/* Price */}
@@ -338,7 +240,7 @@ function SellForm() {
             onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
             required
             className="w-full px-4 py-3 rounded-lg border outline-none"
-            style={{ 
+            style={{
               backgroundColor: colors.background.primary,
               borderColor: colors.border.primary,
               color: colors.text.primary
@@ -347,66 +249,40 @@ function SellForm() {
           />
         </div>
 
-        {/* Category */}
-        <div>
-          <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-            Category *
-          </label>
-          <select
-            value={formData.category}
-            onChange={(e) => setFormData(prev => ({ ...prev, category: parseInt(e.target.value) }))}
-            className="w-full px-4 py-3 rounded-lg border outline-none"
-            style={{ 
-              backgroundColor: colors.background.primary,
-              borderColor: colors.border.primary,
-              color: colors.text.primary
-            }}
-          >
-            {Object.entries(CategoryNames).map(([id, name]) => (
-              <option key={id} value={id}>{name}</option>
-            ))}
-          </select>
-        </div>
-
         {/* Charity Selection */}
-        <div>
-          <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-            Select Charity *
-          </label>
-          {charitiesLoading ? (
-            <p style={{ color: colors.text.tertiary }}>Loading charities...</p>
-          ) : charities.length === 0 ? (
-            <p style={{ color: colors.text.tertiary }}>No verified charities available</p>
-          ) : (
-            <select
-              value={formData.charityAddress}
-              onChange={(e) => setFormData(prev => ({ ...prev, charityAddress: e.target.value }))}
-              required
-              className="w-full px-4 py-3 rounded-lg border outline-none"
-              style={{ 
-                backgroundColor: colors.background.primary,
-                borderColor: colors.border.primary,
-                color: colors.text.primary
-              }}
-            >
-              <option value="">-- Select a charity --</option>
-              {charities.map((charity) => (
-                <option key={charity.id} value={charity.address}>
-                  {charity.name}
-                </option>
-              ))}
-            </select>
-          )}
-          {formData.charityAddress && (
-            <p className="text-sm mt-1" style={{ color: colors.text.tertiary }}>
-              Proceeds will go to this charity after purchase is confirmed
-            </p>
-          )}
-        </div>
+        <CharitySelect
+          charities={charities}
+          loading={charitiesLoading}
+          value={formData.charityAddress}
+          onChange={(value) => setFormData(prev => ({ ...prev, charityAddress: value }))}
+        />
+
+        {/* Item Details - Category Dependent */}
+        <ItemDetails
+          category={formData.category}
+          formData={{
+            gender: formData.gender,
+            condition: formData.condition,
+            size: formData.size,
+            color: formData.color,
+            brand: formData.brand,
+            sportType: formData.sportType,
+            equipmentType: formData.equipmentType,
+            weight: formData.weight,
+            material: formData.material,
+            modelNumber: formData.modelNumber,
+            storageCapacity: formData.storageCapacity,
+            screenSize: formData.screenSize,
+            batteryHealth: formData.batteryHealth,
+            ram: formData.ram,
+            operatingSystem: formData.operatingSystem
+          }}
+          onChange={handleItemDetailChange}
+        />
 
         {/* Status Message */}
         {status && (
-          <div 
+          <div
             className="p-4 rounded-lg text-center"
             style={{ backgroundColor: colors.background.primary, color: colors.text.secondary }}
           >
@@ -424,10 +300,10 @@ function SellForm() {
             color: colors.background.primary
           }}
         >
-          {!isConnected 
-            ? "Connect Wallet to Sell" 
-            : isSubmitting 
-              ? "Creating Listing..." 
+          {!isConnected
+            ? "Connect Wallet to Sell"
+            : isSubmitting
+              ? "Creating Listing..."
               : "Create Listing"
           }
         </button>
