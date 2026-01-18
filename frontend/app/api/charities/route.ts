@@ -17,7 +17,7 @@ export async function GET() {
       if (!charity.isVerified) continue;
 
       // Fetch metadata from IPFS
-      let metadata = { name: "Unknown Charity", description: "" };
+      let metadata = { name: "Unknown Charity", description: "", image: "" };
       try {
         if (charity.metadataURI && charity.metadataURI.startsWith("ipfs://")) {
           const metadataURL = charity.metadataURI.replace("ipfs://", PINATA_GATEWAY);
@@ -28,11 +28,18 @@ export async function GET() {
         console.error("Failed to fetch charity metadata:", e);
       }
 
+      // Convert IPFS image URI to gateway URL
+      let imageURL = "";
+      if (metadata.image && metadata.image.startsWith("ipfs://")) {
+        imageURL = metadata.image.replace("ipfs://", PINATA_GATEWAY);
+      }
+
       charities.push({
         id: i,
         address: charity.charityAddress,
         name: metadata.name || "Unknown Charity",
         description: metadata.description || "",
+        image: imageURL,
         totalReceived: ethers.formatEther(charity.totalReceived),
         isVerified: charity.isVerified
       });

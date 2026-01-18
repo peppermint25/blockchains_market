@@ -76,11 +76,19 @@ export default function Home() {
                 className="rounded-lg shadow-md transition-transform hover:scale-105"
                 style={{ backgroundColor: colors.background.primary }}
               >
-                <div 
-                  className="relative h-48 flex items-center justify-center" 
+                <div
+                  className="relative h-40 flex items-center justify-center"
                   style={{ backgroundColor: colors.background.tertiary }}
                 >
-                  <span className="text-6xl">🏛️</span>
+                  {charity.image ? (
+                    <img
+                      src={charity.image}
+                      alt={charity.name}
+                      className="max-h-full w-auto object-contain"
+                    />
+                  ) : (
+                    <span className="text-6xl">🏛️</span>
+                  )}
                 </div>
 
                 <div className="p-6">
