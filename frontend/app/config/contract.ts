@@ -52,4 +52,4 @@ export const CONTRACT_ABI = [
   "function markItemRequestFulfilled(uint256 _requestId)"
 ];
 
-export const PINATA_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
+export const PINATA_GATEWAY = "https://aquamarine-central-urial-125.mypinata.cloud/ipfs/";
