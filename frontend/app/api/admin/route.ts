@@ -14,8 +14,7 @@ export async function GET(request: Request) {
     const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-    const adminAddress = await contract.admin();
-    const isAdmin = adminAddress.toLowerCase() === address.toLowerCase();
+    const isAdmin = await contract.isAdminAddress(address);
 
     return NextResponse.json({ isAdmin });
   } catch (error) {
