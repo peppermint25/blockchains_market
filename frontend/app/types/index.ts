@@ -16,6 +16,17 @@ export interface ListingMetadata {
   size?: string;
   color?: string;
   brand?: string;
+  gender?: string;
+  sportType?: string;
+  equipmentType?: string;
+  weight?: string;
+  material?: string;
+  modelNumber?: string;
+  storageCapacity?: string;
+  screenSize?: string;
+  batteryHealth?: string;
+  ram?: string;
+  operatingSystem?: string;
 }
 
 export interface DisplayListing {
@@ -35,10 +46,19 @@ export interface DisplayListing {
     size: string;
     color: string;
     brand: string;
+    gender: string;
+    sportType: string;
+    equipmentType: string;
+    weight: string;
+    material: string;
+    modelNumber: string;
+    storageCapacity: string;
+    screenSize: string;
+    batteryHealth: string;
+    ram: string;
+    operatingSystem: string;
   };
 }
-
-// ... keep other exports
 
 export const CategoryNames: Record<number, string> = {
   0: "Clothing",

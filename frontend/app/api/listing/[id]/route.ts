@@ -28,6 +28,17 @@ export async function GET(
       size?: string;
       color?: string;
       brand?: string;
+      gender?: string;
+      sportType?: string;
+      equipmentType?: string;
+      weight?: string;
+      material?: string;
+      modelNumber?: string;
+      storageCapacity?: string;
+      screenSize?: string;
+      batteryHealth?: string;
+      ram?: string;
+      operatingSystem?: string;
     } = { name: "Unknown Item", description: "", image: "" };
 
     try {
@@ -89,7 +100,18 @@ export async function GET(
         condition: metadata.condition || "",
         size: metadata.size || "",
         color: metadata.color || "",
-        brand: metadata.brand || ""
+        brand: metadata.brand || "",
+        gender: metadata.gender || "",
+        sportType: metadata.sportType || "",
+        equipmentType: metadata.equipmentType || "",
+        weight: metadata.weight || "",
+        material: metadata.material || "",
+        modelNumber: metadata.modelNumber || "",
+        storageCapacity: metadata.storageCapacity || "",
+        screenSize: metadata.screenSize || "",
+        batteryHealth: metadata.batteryHealth || "",
+        ram: metadata.ram || "",
+        operatingSystem: metadata.operatingSystem || ""
       }
     };
 
