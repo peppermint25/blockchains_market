@@ -156,8 +156,8 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Item Details */}
-            {product.details && (product.details.condition || product.details.size || product.details.color || product.details.brand) && (
-              <div 
+            {product.details && Object.values(product.details).some(val => val) && (
+              <div
                 className="p-4 rounded-lg mb-6"
                 style={{ backgroundColor: colors.background.primary }}
               >
@@ -169,6 +169,12 @@ export default function ProductDetailPage() {
                     <div>
                       <span style={{ color: colors.text.tertiary }}>Condition: </span>
                       <span style={{ color: colors.text.primary }}>{product.details.condition}</span>
+                    </div>
+                  )}
+                  {product.details.brand && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Brand: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.brand}</span>
                     </div>
                   )}
                   {product.details.size && (
@@ -183,10 +189,70 @@ export default function ProductDetailPage() {
                       <span style={{ color: colors.text.primary }}>{product.details.color}</span>
                     </div>
                   )}
-                  {product.details.brand && (
+                  {product.details.gender && (
                     <div>
-                      <span style={{ color: colors.text.tertiary }}>Brand: </span>
-                      <span style={{ color: colors.text.primary }}>{product.details.brand}</span>
+                      <span style={{ color: colors.text.tertiary }}>Gender: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.gender}</span>
+                    </div>
+                  )}
+                  {product.details.material && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Material: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.material}</span>
+                    </div>
+                  )}
+                  {product.details.weight && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Weight: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.weight}</span>
+                    </div>
+                  )}
+                  {product.details.sportType && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Sport Type: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.sportType}</span>
+                    </div>
+                  )}
+                  {product.details.equipmentType && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Equipment Type: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.equipmentType}</span>
+                    </div>
+                  )}
+                  {product.details.modelNumber && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Model Number: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.modelNumber}</span>
+                    </div>
+                  )}
+                  {product.details.screenSize && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Screen Size: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.screenSize}</span>
+                    </div>
+                  )}
+                  {product.details.storageCapacity && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Storage: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.storageCapacity}</span>
+                    </div>
+                  )}
+                  {product.details.ram && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>RAM: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.ram}</span>
+                    </div>
+                  )}
+                  {product.details.batteryHealth && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Battery Health: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.batteryHealth}</span>
+                    </div>
+                  )}
+                  {product.details.operatingSystem && (
+                    <div>
+                      <span style={{ color: colors.text.tertiary }}>Operating System: </span>
+                      <span style={{ color: colors.text.primary }}>{product.details.operatingSystem}</span>
                     </div>
                   )}
                 </div>
