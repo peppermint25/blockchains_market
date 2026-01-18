@@ -6,6 +6,7 @@ import { colors } from "@/app/styles/colors";
 import { useWallet } from "@/app/hooks/useWallet";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/app/config/contract";
 import { CategoryNames } from "@/app/types";
+import { ImageUpload } from "@/app/components/ImageUpload";
 
 interface Charity {
   id: number;
@@ -59,11 +60,15 @@ export default function AdminPage() {
   const [newCharityAddress, setNewCharityAddress] = useState("");
   const [newCharityName, setNewCharityName] = useState("");
   const [newCharityDescription, setNewCharityDescription] = useState("");
+  const [newCharityImage, setNewCharityImage] = useState<File | null>(null);
+  const [newCharityImagePreview, setNewCharityImagePreview] = useState<string | null>(null);
 
   // Edit charity form
   const [editCharityName, setEditCharityName] = useState("");
   const [editCharityDescription, setEditCharityDescription] = useState("");
   const [editCharityVerified, setEditCharityVerified] = useState(true);
+  const [editCharityImage, setEditCharityImage] = useState<File | null>(null);
+  const [editCharityImagePreview, setEditCharityImagePreview] = useState<string | null>(null);
 
   // Disputes state
   const [disputes, setDisputes] = useState<Dispute[]>([]);
@@ -233,12 +238,33 @@ export default function AdminPage() {
   const handleAddCharity = async (e: React.FormEvent) => {
     e.preventDefault();
     setActionLoading(true);
-    setStatus("Uploading charity metadata to IPFS...");
 
     try {
+      let imageURI = "";
+
+      // Upload image if provided
+      if (newCharityImage) {
+        setStatus("Uploading image to IPFS...");
+        const imageFormData = new FormData();
+        imageFormData.append("file", newCharityImage);
+
+        const imageResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: imageFormData
+        });
+
+        if (!imageResponse.ok) throw new Error("Failed to upload image");
+
+        const { ipfsHash: imageHash } = await imageResponse.json();
+        imageURI = `ipfs://${imageHash}`;
+      }
+
+      setStatus("Uploading charity metadata to IPFS...");
+
       const metadata = {
         name: newCharityName,
-        description: newCharityDescription
+        description: newCharityDescription,
+        image: imageURI
       };
 
       const metadataResponse = await fetch("/api/upload-json", {
@@ -267,6 +293,8 @@ export default function AdminPage() {
       setNewCharityAddress("");
       setNewCharityName("");
       setNewCharityDescription("");
+      setNewCharityImage(null);
+      setNewCharityImagePreview(null);
 
       const response = await fetch("/api/admin/charities");
       const data = await response.json();
@@ -286,6 +314,8 @@ export default function AdminPage() {
     setEditCharityName(charity.name === "No name set" ? "" : charity.name);
     setEditCharityDescription(charity.description === "No description set" ? "" : charity.description);
     setEditCharityVerified(charity.isVerified);
+    setEditCharityImage(null);
+    setEditCharityImagePreview(charity.image || null);
   };
 
   const handleUpdateCharity = async (e: React.FormEvent) => {
@@ -293,12 +323,33 @@ export default function AdminPage() {
     if (!editingCharity) return;
 
     setActionLoading(true);
-    setStatus("Uploading updated metadata to IPFS...");
 
     try {
+      let imageURI = editingCharity.image || "";
+
+      // Upload new image if provided
+      if (editCharityImage) {
+        setStatus("Uploading new image to IPFS...");
+        const imageFormData = new FormData();
+        imageFormData.append("file", editCharityImage);
+
+        const imageResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: imageFormData
+        });
+
+        if (!imageResponse.ok) throw new Error("Failed to upload image");
+
+        const { ipfsHash: imageHash } = await imageResponse.json();
+        imageURI = `ipfs://${imageHash}`;
+      }
+
+      setStatus("Uploading updated metadata to IPFS...");
+
       const metadata = {
         name: editCharityName,
-        description: editCharityDescription
+        description: editCharityDescription,
+        image: imageURI
       };
 
       const metadataResponse = await fetch("/api/upload-json", {
@@ -325,6 +376,8 @@ export default function AdminPage() {
 
       setStatus("Charity updated successfully!");
       setEditingCharity(null);
+      setEditCharityImage(null);
+      setEditCharityImagePreview(null);
 
       const response = await fetch("/api/admin/charities");
       const data = await response.json();
@@ -579,6 +632,21 @@ export default function AdminPage() {
                     style={{ backgroundColor: colors.background.secondary, borderColor: colors.border.primary, color: colors.text.primary }}
                   />
                 </div>
+                <ImageUpload
+                  preview={newCharityImagePreview}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setNewCharityImage(file);
+                      setNewCharityImagePreview(URL.createObjectURL(file));
+                    }
+                  }}
+                  label="Charity Image (Optional)"
+                  required={false}
+                  inputId="charity-image-input"
+                  maxHeight="max-h-32"
+                  placeholder="Click to upload charity logo/image"
+                />
                 <button
                   type="submit"
                   disabled={actionLoading}
@@ -608,9 +676,25 @@ export default function AdminPage() {
                       style={{ borderColor: colors.border.primary, backgroundColor: colors.background.secondary }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold" style={{ color: colors.text.primary }}>{charity.name}</h3>
-                          <p className="text-sm" style={{ color: colors.text.tertiary }}>{formatAddress(charity.address)}</p>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-xl overflow-hidden flex-shrink-0"
+                            style={{ backgroundColor: colors.background.tertiary }}
+                          >
+                            {charity.image ? (
+                              <img
+                                src={charity.image}
+                                alt={charity.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>🏛️</span>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-bold" style={{ color: colors.text.primary }}>{charity.name}</h3>
+                            <p className="text-sm" style={{ color: colors.text.tertiary }}>{formatAddress(charity.address)}</p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span
@@ -664,6 +748,21 @@ export default function AdminPage() {
                         style={{ backgroundColor: colors.background.secondary, borderColor: colors.border.primary, color: colors.text.primary }}
                       />
                     </div>
+                    <ImageUpload
+                      preview={editCharityImagePreview}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setEditCharityImage(file);
+                          setEditCharityImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                      label="Change Charity Image (Optional)"
+                      required={false}
+                      inputId="edit-charity-image-input"
+                      maxHeight="max-h-32"
+                      placeholder="Click to upload new image"
+                    />
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"

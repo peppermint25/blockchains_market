@@ -9,7 +9,7 @@ import { useCharities } from "@/app/hooks/useCharities";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/app/config/contract";
 import { CategoryRoutes } from "@/app/types";
 import { CategorySelect } from "./components/CategorySelect";
-import { ImageUpload } from "./components/ImageUpload";
+import { ImageUpload } from "@/app/components/ImageUpload";
 import { ItemDetails } from "./components/ItemDetails";
 import { CharitySelect } from "./components/CharitySelect";
 
@@ -157,7 +157,7 @@ function SellForm() {
       setStatus("Listing created successfully!");
 
       setTimeout(() => {
-        router.push(`/categories/${CategoryRoutes[formData.category]}`);
+        router.push("/shop");
       }, 2000);
 
     } catch (error: unknown) {

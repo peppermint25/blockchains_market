@@ -6,6 +6,7 @@ export interface Charity {
   address: string;
   name: string;
   description: string;
+  image: string;
   totalReceived: string;
   isVerified: boolean;
 }
