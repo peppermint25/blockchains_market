@@ -26,7 +26,8 @@ function SellForm() {
     condition: "",
     size: "",
     color: "",
-    brand: ""
+    brand: "",
+    gender: ""
   });
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -87,7 +88,8 @@ function SellForm() {
         condition: formData.condition,
         size: formData.size,
         color: formData.color,
-        brand: formData.brand
+        brand: formData.brand,
+        gender: formData.gender
       };
 
       const metadataResponse = await fetch("/api/upload-json", {
@@ -227,13 +229,34 @@ function SellForm() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
+                Gender
+              </label>
+              <select
+                value={formData.gender}
+                onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+                className="w-full px-4 py-3 rounded-lg border outline-none"
+                style={{
+                  backgroundColor: colors.background.secondary,
+                  borderColor: colors.border.primary,
+                  color: colors.text.primary
+                }}
+              >
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Unisex">Unisex</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm" style={{ color: colors.text.secondary }}>
                 Condition
               </label>
               <select
                 value={formData.condition}
                 onChange={(e) => setFormData(prev => ({ ...prev, condition: e.target.value }))}
                 className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{ 
+                style={{
                   backgroundColor: colors.background.secondary,
                   borderColor: colors.border.primary,
                   color: colors.text.primary
@@ -255,7 +278,7 @@ function SellForm() {
                 value={formData.size}
                 onChange={(e) => setFormData(prev => ({ ...prev, size: e.target.value }))}
                 className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{ 
+                style={{
                   backgroundColor: colors.background.secondary,
                   borderColor: colors.border.primary,
                   color: colors.text.primary
@@ -273,7 +296,7 @@ function SellForm() {
                 value={formData.color}
                 onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
                 className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{ 
+                style={{
                   backgroundColor: colors.background.secondary,
                   borderColor: colors.border.primary,
                   color: colors.text.primary
@@ -291,7 +314,7 @@ function SellForm() {
                 value={formData.brand}
                 onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
                 className="w-full px-4 py-3 rounded-lg border outline-none"
-                style={{ 
+                style={{
                   backgroundColor: colors.background.secondary,
                   borderColor: colors.border.primary,
                   color: colors.text.primary
