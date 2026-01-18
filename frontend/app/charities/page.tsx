@@ -195,11 +195,19 @@ export default function CharitiesPage() {
                       style={{ backgroundColor: colors.background.primary }}
                     >
                       <div className="flex items-center gap-4 mb-4">
-                        <div 
-                          className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
+                        <div
+                          className="w-16 h-16 rounded-full flex items-center justify-center text-3xl overflow-hidden"
                           style={{ backgroundColor: colors.background.tertiary }}
                         >
-                          🏛️
+                          {charity.image ? (
+                            <img
+                              src={charity.image}
+                              alt={charity.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span>🏛️</span>
+                          )}
                         </div>
                         <div>
                           <h3 className="font-bold" style={{ color: colors.text.primary }}>
