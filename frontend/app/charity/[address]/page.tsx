@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { colors } from "@/app/styles/colors";
-import { useGoals, GoalStatus, GoalStatusColor } from "@/app/hooks/useGoals";
-import { DisplayListing, CategoryNames } from "@/app/types";
+import { GoalStatus, GoalStatusColor } from "@/app/hooks/useGoals";
+import { CategoryNames } from "@/app/types";
 import Link from "next/link";
 
 interface CharityDetails {
@@ -17,57 +17,60 @@ interface CharityDetails {
   isVerified: boolean;
 }
 
+interface Goal {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  targetAmount: string;
+  currentAmount: string;
+  progress: number;
+  status: number;
+  deadline: number;
+}
+
+interface Listing {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  price: string;
+  category: number;
+  status: number;
+  seller: string;
+  charity: string;
+}
+
 export default function CharityDetailPage() {
   const params = useParams();
   const router = useRouter();
   const charityAddress = params.address as string;
 
   const [charity, setCharity] = useState<CharityDetails | null>(null);
-  const [donatedItems, setDonatedItems] = useState<DisplayListing[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { goals, loading: goalsLoading } = useGoals();
-
-  // Filter goals for this charity
-  const charityGoals = goals.filter(
-    (goal) => goal.charity.toLowerCase() === charityAddress.toLowerCase()
-  );
-
   useEffect(() => {
     async function fetchCharityData() {
+      if (!charityAddress) return;
+
+      setLoading(true);
+      setError(null);
+
       try {
-        // Fetch charity details
-        const charitiesResponse = await fetch("/api/charities");
-        const charitiesData = await charitiesResponse.json();
+        const response = await fetch(`/api/charity/${charityAddress}`);
+        const data = await response.json();
 
-        const foundCharity = charitiesData.charities?.find(
-          (c: CharityDetails) => c.address.toLowerCase() === charityAddress.toLowerCase()
-        );
-
-        if (!foundCharity) {
-          setError("Charity not found");
-          setLoading(false);
+        if (data.error) {
+          setError(data.error);
           return;
         }
 
-        setCharity(foundCharity);
-
-        // Fetch all listings and filter by charity
-        const listingsResponse = await fetch("/api/listings");
-        const listingsData = await listingsResponse.json();
-
-        // Filter items donated to this charity (sold items with this charity address)
-        const charitiesListingsResponse = await fetch(`/api/listings?charity=${charityAddress}`);
-        const allListingsResponse = await fetch("/api/listings");
-
-        const allListingsData = await allListingsResponse.json();
-        const charityItems = allListingsData.listings?.filter(
-          (listing: DisplayListing) =>
-            listing.charity.toLowerCase() === charityAddress.toLowerCase()
-        ) || [];
-
-        setDonatedItems(charityItems);
+        setCharity(data.charity);
+        setGoals(data.goals || []);
+        setListings(data.listings || []);
       } catch (e) {
         setError("Failed to fetch charity data");
         console.error(e);
@@ -76,9 +79,7 @@ export default function CharityDetailPage() {
       }
     }
 
-    if (charityAddress) {
-      fetchCharityData();
-    }
+    fetchCharityData();
   }, [charityAddress]);
 
   const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -87,6 +88,8 @@ export default function CharityDetailPage() {
     if (timestamp === 0) return "No deadline";
     return new Date(timestamp * 1000).toLocaleDateString();
   };
+
+  const activeGoals = goals.filter(g => g.status === 0);
 
   if (loading) {
     return (
@@ -181,7 +184,7 @@ export default function CharityDetailPage() {
                     Active Goals
                   </p>
                   <p className="text-2xl font-bold" style={{ color: colors.text.primary }}>
-                    {charityGoals.filter(g => g.status === 0).length}
+                    {activeGoals.length}
                   </p>
                 </div>
               </div>
@@ -203,98 +206,96 @@ export default function CharityDetailPage() {
         </div>
 
         {/* Active Fundraising Goals */}
-        {charityGoals.filter(g => g.status === 0).length > 0 && (
+        {activeGoals.length > 0 && (
           <section className="mb-8">
             <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text.primary }}>
               🎯 Active Fundraising Goals
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {charityGoals
-                .filter(g => g.status === 0)
-                .map((goal) => (
+              {activeGoals.map((goal) => (
+                <div
+                  key={goal.id}
+                  className="rounded-lg overflow-hidden"
+                  style={{ backgroundColor: colors.background.primary }}
+                >
                   <div
-                    key={goal.id}
-                    className="rounded-lg overflow-hidden"
-                    style={{ backgroundColor: colors.background.primary }}
+                    className="h-40 relative"
+                    style={{ backgroundColor: colors.background.tertiary }}
                   >
-                    <div
-                      className="h-40 relative"
-                      style={{ backgroundColor: colors.background.tertiary }}
+                    {goal.image ? (
+                      <img
+                        src={goal.image}
+                        alt={goal.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-5xl">
+                        🎯
+                      </div>
+                    )}
+                    <span
+                      className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium text-white"
+                      style={{ backgroundColor: GoalStatusColor[goal.status] }}
                     >
-                      {goal.image ? (
-                        <img
-                          src={goal.image}
-                          alt={goal.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-5xl">
-                          🎯
-                        </div>
-                      )}
-                      <span
-                        className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium text-white"
-                        style={{ backgroundColor: GoalStatusColor[goal.status] }}
+                      {GoalStatus[goal.status]}
+                    </span>
+                  </div>
+
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg mb-2" style={{ color: colors.text.primary }}>
+                      {goal.title}
+                    </h3>
+                    <p className="text-sm mb-4 line-clamp-2" style={{ color: colors.text.secondary }}>
+                      {goal.description || "Help us reach our fundraising goal!"}
+                    </p>
+
+                    {/* Progress Bar */}
+                    <div className="mb-2">
+                      <div
+                        className="h-3 rounded-full overflow-hidden"
+                        style={{ backgroundColor: colors.background.tertiary }}
                       >
-                        {GoalStatus[goal.status]}
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${goal.progress}%`,
+                            backgroundColor: goal.progress >= 100 ? "#22c55e" : colors.button.primary
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between text-sm mb-2">
+                      <span style={{ color: colors.text.secondary }}>
+                        {goal.currentAmount} ETH raised
+                      </span>
+                      <span style={{ color: colors.text.primary }}>
+                        {goal.progress.toFixed(0)}%
                       </span>
                     </div>
 
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2" style={{ color: colors.text.primary }}>
-                        {goal.title}
-                      </h3>
-                      <p className="text-sm mb-4 line-clamp-2" style={{ color: colors.text.secondary }}>
-                        {goal.description || "Help us reach our fundraising goal!"}
-                      </p>
-
-                      {/* Progress Bar */}
-                      <div className="mb-2">
-                        <div
-                          className="h-3 rounded-full overflow-hidden"
-                          style={{ backgroundColor: colors.background.tertiary }}
-                        >
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${goal.progress}%`,
-                              backgroundColor: goal.progress >= 100 ? "#22c55e" : colors.button.primary
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between text-sm mb-2">
-                        <span style={{ color: colors.text.secondary }}>
-                          {goal.currentAmount} ETH raised
-                        </span>
-                        <span style={{ color: colors.text.primary }}>
-                          {goal.progress.toFixed(0)}%
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: colors.text.tertiary }}>
-                          Goal: {goal.targetAmount} ETH
-                        </span>
-                        <span style={{ color: colors.text.tertiary }}>
-                          Deadline: {formatDeadline(goal.deadline)}
-                        </span>
-                      </div>
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: colors.text.tertiary }}>
+                        Goal: {goal.targetAmount} ETH
+                      </span>
+                      <span style={{ color: colors.text.tertiary }}>
+                        Deadline: {formatDeadline(goal.deadline)}
+                      </span>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           </section>
         )}
 
-        {/* Donated Items */}
+        {/* Items Supporting This Charity */}
         <section>
           <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text.primary }}>
             💝 Items Supporting This Charity
           </h2>
 
-          {donatedItems.length === 0 ? (
+          {listings.length === 0 ? (
             <div
               className="text-center py-12 rounded-lg"
               style={{ backgroundColor: colors.background.primary }}
@@ -306,7 +307,7 @@ export default function CharityDetailPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {donatedItems.map((item) => (
+              {listings.map((item) => (
                 <Link
                   key={item.id}
                   href={`/product/${item.id}`}
