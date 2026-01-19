@@ -11,13 +11,14 @@ interface CharitySelectProps {
   loading: boolean;
   value: string;
   onChange: (value: string) => void;
+  label?: string;
 }
 
-export function CharitySelect({ charities, loading, value, onChange }: CharitySelectProps) {
+export function CharitySelect({ charities, loading, value, onChange, label = "Select Charity *" }: CharitySelectProps) {
   return (
     <div>
       <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-        Select Charity *
+        {label}
       </label>
       {loading ? (
         <p style={{ color: colors.text.tertiary }}>Loading charities...</p>

@@ -1,314 +1,31 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ethers } from "ethers";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { colors } from "@/app/styles/colors";
-import { useWallet } from "@/app/hooks/useWallet";
-import { useCharities } from "@/app/hooks/useCharities";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/app/config/contract";
-import { CategoryRoutes } from "@/app/types";
-import { CategorySelect } from "./components/CategorySelect";
-import { ImageUpload } from "@/app/components/ImageUpload";
-import { ItemDetails } from "./components/ItemDetails";
-import { CharitySelect } from "./components/CharitySelect";
+import { ItemForm } from "@/app/components/ItemForm";
 
-function SellForm() {
-  const router = useRouter();
+function SellFormWrapper() {
   const searchParams = useSearchParams();
   const preselectedCharity = searchParams.get("charity") || "";
 
-  const { isConnected, connect, getSigner } = useWallet();
-  const { charities, loading: charitiesLoading } = useCharities();
-
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    category: 0,
-    charityAddress: preselectedCharity,
-    condition: "",
-    size: "",
-    color: "",
-    brand: "",
-    gender: "",
-    sportType: "",
-    equipmentType: "",
-    weight: "",
-    material: "",
-    modelNumber: "",
-    storageCapacity: "",
-    screenSize: "",
-    batteryHealth: "",
-    ram: "",
-    operatingSystem: ""
-  });
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImage(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleItemDetailChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!isConnected) {
-      connect();
-      return;
-    }
-
-    if (!image) {
-      setStatus("Please select an image");
-      return;
-    }
-
-    if (!formData.charityAddress) {
-      setStatus("Please select a charity");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setStatus("Uploading image to IPFS...");
-
-    try {
-      const imageFormData = new FormData();
-      imageFormData.append("file", image);
-
-      const imageResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: imageFormData
-      });
-
-      if (!imageResponse.ok) {
-        throw new Error("Failed to upload image");
-      }
-
-      const { ipfsHash: imageHash } = await imageResponse.json();
-      const imageURI = `ipfs://${imageHash}`;
-
-      setStatus("Uploading metadata to IPFS...");
-
-      const metadata = {
-        name: formData.name,
-        description: formData.description,
-        image: imageURI,
-        condition: formData.condition,
-        size: formData.size,
-        color: formData.color,
-        brand: formData.brand,
-        gender: formData.gender,
-        sportType: formData.sportType,
-        equipmentType: formData.equipmentType,
-        weight: formData.weight,
-        material: formData.material,
-        modelNumber: formData.modelNumber,
-        storageCapacity: formData.storageCapacity,
-        screenSize: formData.screenSize,
-        batteryHealth: formData.batteryHealth,
-        ram: formData.ram,
-        operatingSystem: formData.operatingSystem
-      };
-
-      const metadataResponse = await fetch("/api/upload-json", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(metadata)
-      });
-
-      if (!metadataResponse.ok) {
-        throw new Error("Failed to upload metadata");
-      }
-
-      const { ipfsHash: metadataHash } = await metadataResponse.json();
-      const metadataURI = `ipfs://${metadataHash}`;
-
-      setStatus("Creating listing on blockchain...");
-
-      const signer = await getSigner();
-      if (!signer) {
-        throw new Error("Failed to get wallet signer");
-      }
-
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-      const priceInWei = ethers.parseEther(formData.price);
-
-      const tx = await contract.createListing(
-        metadataURI,
-        priceInWei,
-        formData.category,
-        formData.charityAddress
-      );
-
-      setStatus("Waiting for confirmation...");
-      await tx.wait();
-
-      setStatus("Listing created successfully!");
-
-      setTimeout(() => {
-        router.push("/shop");
-      }, 2000);
-
-    } catch (error: unknown) {
-      console.error("Error creating listing:", error);
-      setStatus(error instanceof Error ? error.message : "Failed to create listing");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
-    <div className="max-w-2xl mx-auto px-4">
-      <h1 className="text-3xl font-bold mb-8" style={{ color: colors.text.primary }}>
-        Sell an Item
-      </h1>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Category */}
-        <CategorySelect
-          value={formData.category}
-          onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-        />
-
-        {/* Image Upload */}
-        <ImageUpload
-          preview={imagePreview}
-          onChange={handleImageChange}
-        />
-
-        {/* Name */}
-        <div>
-          <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-            Item Name *
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            required
-            className="w-full px-4 py-3 rounded-lg border outline-none"
-            style={{
-              backgroundColor: colors.background.primary,
-              borderColor: colors.border.primary,
-              color: colors.text.primary
-            }}
-            placeholder="e.g., Vintage Leather Jacket"
-          />
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-            Description *
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            required
-            rows={4}
-            className="w-full px-4 py-3 rounded-lg border outline-none resize-none"
-            style={{
-              backgroundColor: colors.background.primary,
-              borderColor: colors.border.primary,
-              color: colors.text.primary
-            }}
-            placeholder="Describe your item in detail..."
-          />
-        </div>
-
-        {/* Price */}
-        <div>
-          <label className="block mb-2 font-medium" style={{ color: colors.text.primary }}>
-            Price (ETH) *
-          </label>
-          <input
-            type="number"
-            step="0.0001"
-            min="0.0001"
-            value={formData.price}
-            onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-            required
-            className="w-full px-4 py-3 rounded-lg border outline-none"
-            style={{
-              backgroundColor: colors.background.primary,
-              borderColor: colors.border.primary,
-              color: colors.text.primary
-            }}
-            placeholder="0.01"
-          />
-        </div>
-
-        {/* Charity Selection */}
-        <CharitySelect
-          charities={charities}
-          loading={charitiesLoading}
-          value={formData.charityAddress}
-          onChange={(value) => setFormData(prev => ({ ...prev, charityAddress: value }))}
-        />
-
-        {/* Item Details - Category Dependent */}
-        <ItemDetails
-          category={formData.category}
-          formData={{
-            gender: formData.gender,
-            condition: formData.condition,
-            size: formData.size,
-            color: formData.color,
-            brand: formData.brand,
-            sportType: formData.sportType,
-            equipmentType: formData.equipmentType,
-            weight: formData.weight,
-            material: formData.material,
-            modelNumber: formData.modelNumber,
-            storageCapacity: formData.storageCapacity,
-            screenSize: formData.screenSize,
-            batteryHealth: formData.batteryHealth,
-            ram: formData.ram,
-            operatingSystem: formData.operatingSystem
-          }}
-          onChange={handleItemDetailChange}
-        />
-
-        {/* Status Message */}
-        {status && (
-          <div
-            className="p-4 rounded-lg text-center"
-            style={{ backgroundColor: colors.background.primary, color: colors.text.secondary }}
-          >
-            {status}
+    <ItemForm
+      mode="sell"
+      preselectedCharity={preselectedCharity}
+      header={
+          <div className="text-left mb-8">
+              <h1 className="text-3xl font-bold mb-2" style={{ color: colors.text.primary }}>
+                  Sell an Item
+              </h1>
+              <p style={{ color: colors.text.secondary }}>
+                  Sell your items and remember - all proceeds go directly to a charity of your choice!
+              </p>
           </div>
-        )}
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isSubmitting || (charities.length === 0)}
-          className="w-full py-4 rounded-lg font-medium text-lg transition-all hover:opacity-90 disabled:opacity-50"
-          style={{
-            backgroundColor: colors.button.primary,
-            color: colors.background.primary
-          }}
-        >
-          {!isConnected
-            ? "Connect Wallet to Sell"
-            : isSubmitting
-              ? "Creating Listing..."
-              : "Create Listing"
-          }
-        </button>
-      </form>
-    </div>
+      }
+      submitButtonText="Create Listing"
+      submitButtonColor={colors.button.primary}
+    />
   );
 }
 
@@ -320,7 +37,7 @@ export default function SellPage() {
           <p style={{ color: colors.text.primary }}>Loading...</p>
         </div>
       }>
-        <SellForm />
+        <SellFormWrapper />
       </Suspense>
     </div>
   );

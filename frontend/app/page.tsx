@@ -71,8 +71,9 @@ export default function Home() {
         {!loading && !error && charities.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {charities.map((charity) => (
-              <div
+              <Link
                 key={charity.id}
+                href={`/charity/${charity.address}`}
                 className="rounded-lg shadow-md transition-transform hover:scale-105"
                 style={{ backgroundColor: colors.background.primary }}
               >
@@ -100,7 +101,7 @@ export default function Home() {
                     {charity.description || "Supporting important causes in our community."}
                   </p>
 
-                  <div 
+                  <div
                     className="flex justify-between items-center pt-4 border-t"
                     style={{ borderColor: colors.border.primary }}
                   >
@@ -110,19 +111,12 @@ export default function Home() {
                         {charity.totalReceived} ETH
                       </p>
                     </div>
-                    <Link
-                      href={`/sell?charity=${charity.address}`}
-                      className="px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80 uppercase text-sm"
-                      style={{
-                        backgroundColor: colors.button.primary,
-                        color: colors.background.primary,
-                      }}
-                    >
-                      Support
-                    </Link>
+                    <span className="text-sm" style={{ color: colors.text.secondary }}>
+                      View Details →
+                    </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
