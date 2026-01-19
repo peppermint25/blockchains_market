@@ -180,7 +180,7 @@ export default function CharitiesPage() {
               </h2>
               
               {charities.length === 0 ? (
-                <div 
+                <div
                   className="text-center py-8 rounded-lg"
                   style={{ backgroundColor: colors.background.primary }}
                 >
@@ -189,9 +189,10 @@ export default function CharitiesPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {charities.map((charity) => (
-                    <div
+                    <Link
                       key={charity.id}
-                      className="rounded-lg p-6"
+                      href={`/charity/${charity.address}`}
+                      className="rounded-lg p-6 transition-transform hover:scale-105"
                       style={{ backgroundColor: colors.background.primary }}
                     >
                       <div className="flex items-center gap-4 mb-4">
@@ -223,7 +224,7 @@ export default function CharitiesPage() {
                         {charity.description || "Supporting important causes in our community."}
                       </p>
 
-                      <div 
+                      <div
                         className="flex justify-between items-center pt-4 border-t"
                         style={{ borderColor: colors.border.primary }}
                       >
@@ -235,18 +236,11 @@ export default function CharitiesPage() {
                             {charity.totalReceived} ETH
                           </p>
                         </div>
-                        <Link
-                          href={`/sell?charity=${charity.address}`}
-                          className="px-4 py-2 rounded-lg text-sm font-medium"
-                          style={{
-                            backgroundColor: colors.button.primary,
-                            color: colors.background.primary
-                          }}
-                        >
-                          Support
-                        </Link>
+                        <span className="text-sm" style={{ color: colors.text.secondary }}>
+                          View Details →
+                        </span>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}

@@ -6,6 +6,7 @@ import { colors } from "@/app/styles/colors";
 import { useWallet } from "@/app/hooks/useWallet";
 import { useCart } from "@/app/context/CartContext";
 import { DisplayListing, CategoryNames } from "@/app/types";
+import Link from "next/link";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -260,7 +261,7 @@ export default function ProductDetailPage() {
             )}
 
             {/* Seller & Charity Info */}
-            <div 
+            <div
               className="p-4 rounded-lg mb-6"
               style={{ backgroundColor: colors.background.primary }}
             >
@@ -270,9 +271,13 @@ export default function ProductDetailPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span style={{ color: colors.text.tertiary }}>Proceeds go to</span>
-                <span style={{ color: colors.text.primary }}>
+                <Link
+                  href={`/charity/${product.charity}`}
+                  className="hover:underline"
+                  style={{ color: colors.button.primary }}
+                >
                   {product.charityName || formatAddress(product.charity)}
-                </span>
+                </Link>
               </div>
             </div>
 
